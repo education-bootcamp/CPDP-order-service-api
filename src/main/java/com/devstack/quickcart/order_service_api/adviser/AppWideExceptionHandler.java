@@ -1,5 +1,6 @@
 package com.devstack.quickcart.order_service_api.adviser;
 
+
 import com.devstack.quickcart.order_service_api.exception.EntryNotFoundException;
 import com.devstack.quickcart.order_service_api.util.StandardResponseDto;
 import org.springframework.http.HttpStatus;
@@ -9,13 +10,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class AppWideExceptionHandler {
-    @ExceptionHandler(EntryNotFoundException.class)
+   /* @ExceptionHandler(EntryNotFoundException.class)
     public ResponseEntity<StandardResponseDto> handleEntryNotFoundException(EntryNotFoundException e) {
         return new ResponseEntity<>(
-                new StandardResponseDto(
-                        404,e.getMessage(),
-                        e
-                ), HttpStatus.NOT_FOUND
+                 StandardResponseDto.builder()
+                         .status(404)
+                         .data(e)
+                         .message(e.getMessage()).build(), HttpStatus.NOT_FOUND
         );
-    }
+    }*/
 }
