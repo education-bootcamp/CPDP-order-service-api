@@ -1,10 +1,7 @@
 package com.devstack.quickcart.order_service_api.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,9 +11,11 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class OrderStatus {
     @Id
     @Column(name="status_id", unique=true, nullable=false, length=80)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String statusId;
     @Column(name="status", nullable=false, length=80, unique = true) //PENDING, REJECTED
     private String status;

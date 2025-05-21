@@ -14,6 +14,7 @@ import java.util.Date;
 public class OrderDetail {
     @Id
     @Column(name="detail_id", unique=true, nullable=false, length=80)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String detailId;
 
     @Column(name="product_id", nullable=false, length=80)

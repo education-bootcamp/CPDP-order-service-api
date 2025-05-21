@@ -15,7 +15,9 @@ public class CustomerOrderController {
     private final CustomerOrderService customerOrderService;
 
     @PostMapping("/business")
-    public ResponseEntity<StandardResponseDto> create(@RequestBody CustomerOrderRequestDto request) {
+    public ResponseEntity<StandardResponseDto> create(
+            @RequestBody CustomerOrderRequestDto request
+            /*auth headers*/) {
         customerOrderService.createOrder(request);
         return new ResponseEntity<>(
                 new StandardResponseDto(

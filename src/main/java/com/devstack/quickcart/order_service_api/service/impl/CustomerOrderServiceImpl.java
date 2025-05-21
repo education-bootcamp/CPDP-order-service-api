@@ -10,49 +10,61 @@ import com.devstack.quickcart.order_service_api.entity.OrderDetail;
 import com.devstack.quickcart.order_service_api.entity.OrderStatus;
 import com.devstack.quickcart.order_service_api.exception.EntryNotFoundException;
 import com.devstack.quickcart.order_service_api.repo.CustomerOrderRepo;
+import com.devstack.quickcart.order_service_api.repo.OrderDetailRepo;
 import com.devstack.quickcart.order_service_api.repo.OrderStatusRepo;
 import com.devstack.quickcart.order_service_api.service.CustomerOrderService;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.query.Order;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CustomerOrderServiceImpl implements CustomerOrderService {
 
     private final CustomerOrderRepo customerOrderRepo;
     private final OrderStatusRepo orderStatusRepo;
+    private final OrderDetailRepo orderDetailRepo;
 
+    @Transactional
     @Override
     public void createOrder(CustomerOrderRequestDto requestDto) {
+        // you must use a real UserId
+        var userId = "TempUserId";
         OrderStatus orderStatus = orderStatusRepo.findByStatus("PENDING").orElseThrow(() -> new EntryNotFoundException("Order Status Not Found. so you can't place an order please contact admin"));
 
+        var orderId = UUID.randomUUID().toString();
+
         CustomerOrder customerOrder = new CustomerOrder();
-        customerOrder.setOrderId(UUID.randomUUID().toString());
-        customerOrder.setOrderDate(requestDto.getOrderDate());
+        customerOrder.setOrderId(orderId);
+        customerOrder.setOrderDate(new Date());
         customerOrder.setRemark("");
         customerOrder.setTotalAmount(requestDto.getTotalAmount());
-        customerOrder.setUserId(requestDto.getUserId());
+        customerOrder.setUserId(userId);
         customerOrder.setOrderStatus(orderStatus);
-        customerOrder.setProducts(
-                requestDto.getOrderDetails().stream().map(e -> createOrderDetail(e, customerOrder)).collect(Collectors.toSet())
-        );
         customerOrderRepo.save(customerOrder);
+
+        for (OrderDetailRequestDto t : requestDto.getOrderDetails()) {
+            orderDetailRepo.save(OrderDetail.builder()
+                    .qty(t.getQty())
+                    .productId(t.getProductId())
+                    .customerOrder(customerOrder)
+                    .discount(t.getDiscount())
+                    .unitPrice(t.getUnitPrice()).build());
+        }
 
     }
 
     @Override
     public void updateOrder(CustomerOrderRequestDto requestDto, String orderId) {
         CustomerOrder customerOrder =
-                customerOrderRepo.findById(orderId).orElseThrow(()->new EntryNotFoundException(String.format("Order not found with %s", orderId)));
-        customerOrder.setOrderDate(requestDto.getOrderDate());
+                customerOrderRepo.findById(orderId).orElseThrow(() -> new EntryNotFoundException(String.format("Order not found with %s", orderId)));
+        customerOrder.setOrderDate(new Date());
         customerOrder.setTotalAmount(requestDto.getTotalAmount());
         customerOrderRepo.save(customerOrder);
     }
@@ -60,7 +72,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
     @Override
     public void manageRemark(String remark, String orderId) {
         CustomerOrder customerOrder =
-                customerOrderRepo.findById(orderId).orElseThrow(()->new EntryNotFoundException(String.format("Order not found with %s", orderId)));
+                customerOrderRepo.findById(orderId).orElseThrow(() -> new EntryNotFoundException(String.format("Order not found with %s", orderId)));
         customerOrder.setRemark(remark);
         customerOrderRepo.save(customerOrder);
     }
@@ -68,7 +80,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
     @Override
     public void manageStatus(String status, String orderId) {
         CustomerOrder customerOrder =
-                customerOrderRepo.findById(orderId).orElseThrow(()->new RuntimeException(String.format("Order not found with %s", orderId)));
+                customerOrderRepo.findById(orderId).orElseThrow(() -> new RuntimeException(String.format("Order not found with %s", orderId)));
         OrderStatus orderStatus = orderStatusRepo.findByStatus(status).orElseThrow(() -> new EntryNotFoundException("Order Status Not Found. so you can't place an order please contact admin"));
         customerOrder.setOrderStatus(orderStatus);
         customerOrderRepo.save(customerOrder);
@@ -77,15 +89,15 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
 
     @Override
     public CustomerOrderResponseDto findOrderById(String orderId) {
-       CustomerOrder customerOrder =
-               customerOrderRepo.findById(orderId).orElseThrow(()->new EntryNotFoundException(String.format("Order not found with %s", orderId)));
+        CustomerOrder customerOrder =
+                customerOrderRepo.findById(orderId).orElseThrow(() -> new EntryNotFoundException(String.format("Order not found with %s", orderId)));
         return toCustomerOrderResponseDto(customerOrder);
     }
 
     @Override
     public void deleteById(String orderId) {
         CustomerOrder customerOrder =
-                customerOrderRepo.findById(orderId).orElseThrow(()->new EntryNotFoundException(String.format("Order not found with %s", orderId)));
+                customerOrderRepo.findById(orderId).orElseThrow(() -> new EntryNotFoundException(String.format("Order not found with %s", orderId)));
         customerOrderRepo.delete(customerOrder);
     }
 
@@ -96,7 +108,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
                         customerOrderRepo.searchCount(searchText)
                 )
                 .dataList(
-                        customerOrderRepo.searchAll(searchText, PageRequest.of(page,size))
+                        customerOrderRepo.searchAll(searchText, PageRequest.of(page, size))
                                 .stream().map(this::toCustomerOrderResponseDto).collect(Collectors.toList())
                 )
                 .build();
@@ -133,7 +145,7 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
     }
 
     private OrderDetail createOrderDetail(OrderDetailRequestDto requestDto, CustomerOrder order) {
-        if (requestDto==null){
+        if (requestDto == null) {
             return null;
         }
         return OrderDetail.builder()
