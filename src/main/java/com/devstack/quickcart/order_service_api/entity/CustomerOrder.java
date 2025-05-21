@@ -28,7 +28,7 @@ public class CustomerOrder {
     @Column(name="remark", length=750)
     private String remark;
     //===================
-    @OneToMany(mappedBy = "customerOrder")
+    @OneToMany(mappedBy = "customerOrder", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OrderDetail> products = new HashSet<>();
     @ManyToOne
     @JoinColumn(name = "order_status_id")

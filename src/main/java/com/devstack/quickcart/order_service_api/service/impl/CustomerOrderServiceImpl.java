@@ -47,16 +47,20 @@ public class CustomerOrderServiceImpl implements CustomerOrderService {
         customerOrder.setTotalAmount(requestDto.getTotalAmount());
         customerOrder.setUserId(userId);
         customerOrder.setOrderStatus(orderStatus);
-        customerOrderRepo.save(customerOrder);
+
 
         for (OrderDetailRequestDto t : requestDto.getOrderDetails()) {
-            orderDetailRepo.save(OrderDetail.builder()
-                    .qty(t.getQty())
-                    .productId(t.getProductId())
-                    .customerOrder(customerOrder)
-                    .discount(t.getDiscount())
-                    .unitPrice(t.getUnitPrice()).build());
+            customerOrder.getProducts().add(
+                    OrderDetail.builder()
+                            .qty(t.getQty())
+                            .productId(t.getProductId())
+                            .customerOrder(customerOrder)
+                            .discount(t.getDiscount())
+                            .unitPrice(t.getUnitPrice()).build()
+            );
         }
+
+        customerOrderRepo.save(customerOrder);
 
     }
 
