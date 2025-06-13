@@ -19,6 +19,10 @@ public class CustomerOrder {
     @Id
     @Column(name="order_id", unique=true, nullable=false, length=80)
     private String orderId;
+
+    @Column(name="intent_id", unique = true, length=80)
+    private String intentId;
+
     @Column(name="order_date", nullable=false, columnDefinition = "DATETIME")
     private Date orderDate;
     @Column(name="total_amount", nullable=false)
@@ -30,6 +34,7 @@ public class CustomerOrder {
     //===================
     @OneToMany(mappedBy = "customerOrder", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OrderDetail> products = new HashSet<>();
+
     @ManyToOne
     @JoinColumn(name = "order_status_id")
     private OrderStatus orderStatus;
